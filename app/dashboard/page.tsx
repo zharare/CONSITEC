@@ -86,8 +86,8 @@ export default function Dashboard() {
     <div className="container grid">
       <div className="header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h2 style={{ margin: 0 }}>CONSITEC COMMERCIAL AND OPERATIONAL MANAGEMENT PANEL</h2>
-          <small>Monthly renewable control center</small>
+          <h2 style={{ margin: 0 }}>{t.title}</h2>
+          <small>{t.subtitle}</small>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))}>{Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{format(addMonths(new Date(year, 0, 1), i), "MMMM")}</option>)}</select>
