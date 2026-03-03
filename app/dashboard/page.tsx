@@ -194,15 +194,20 @@ function CrudCard({ title, endpoint, fields, items, onDone }: { title: string; e
       <button className="btn" onClick={async () => { await fetch(`/api/metadata/${endpoint}`, { method: "POST", body: JSON.stringify(form) }); setForm({}); onDone(); }}>Add</button>
     </div>
     <ul>
-      {items.slice(0, 8).map((i) => (
-        <li key={i.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-          <span>{i.name || `${i.department} - ${i.district}`}</span>
-          <button
-            style={{ background: "red", color: "white", border: "none", padding: "2px 6px", cursor: "pointer" }}
-            onClick={async () => {
-              if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
-              await fetch(`/api/metadata/${endpoint}/${i.id}`, { method: "DELETE" });
-              onDone(); // recarga la lista
+        {items.slice(0, 8).map((i) => (
+          <li key={i.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <span>{i.name || `${i.department} - ${i.district}`}</span>
+            <button
+              style={{ background: "red", color: "white", border: "none", padding: "2px 6px", cursor: "pointer" }}
+              onClick={async () => {
+            if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+            try {
+              const res = await fetch(`/api/metadata/${endpoint}/${i.id}`, { method: "DELETE" });
+                if (!res.ok) throw new Error("No se pudo eliminar");
+                  onDone(); // recarga la lista
+                } catch (err) {
+              alert("Error eliminando el registro");
+              }
             }}
           >
             Eliminar
