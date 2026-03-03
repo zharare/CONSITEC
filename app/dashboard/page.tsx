@@ -32,6 +32,9 @@ type Sale = {
 };
 
 export default function Dashboard() {
+  const lang = "es";
+  const t = translations[lang];
+  
   const now = new Date();
   const [tab, setTab] = useState("summary");
   const [month, setMonth] = useState(now.getMonth() + 1);
