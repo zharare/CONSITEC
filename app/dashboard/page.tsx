@@ -193,6 +193,22 @@ function CrudCard({ title, endpoint, fields, items, onDone }: { title: string; e
     <div className="grid">{fields.map((f) => <input key={f} className="input" placeholder={f} value={form[f] || ""} onChange={(e) => setForm({ ...form, [f]: e.target.value })} />)}
       <button className="btn" onClick={async () => { await fetch(`/api/metadata/${endpoint}`, { method: "POST", body: JSON.stringify(form) }); setForm({}); onDone(); }}>Add</button>
     </div>
-    <ul>{items.slice(0, 8).map((i) => <li key={i.id}>{i.name || `${i.department} - ${i.district}`}</li>)}</ul>
+    <ul>
+      {items.slice(0, 8).map((i) => (
+        <li key={i.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <span>{i.name || `${i.department} - ${i.district}`}</span>
+          <button
+            style={{ background: "red", color: "white", border: "none", padding: "2px 6px", cursor: "pointer" }}
+            onClick={async () => {
+              if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+              await fetch(`/api/metadata/${endpoint}/${i.id}`, { method: "DELETE" });
+              onDone(); // recarga la lista
+            }}
+          >
+            Eliminar
+          </button>
+        </li>
+      ))}
+    </ul>
   </div>;
 }
