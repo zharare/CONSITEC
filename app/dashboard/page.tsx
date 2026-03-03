@@ -1,5 +1,6 @@
 "use client";
 
+import { translations } from "@/lib/translations";
 import { useEffect, useMemo, useState } from "react";
 import { addMonths, format } from "date-fns";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
