@@ -1,4 +1,6 @@
 // app/api/auth/login/route.ts
+// app/api/auth/login/route.ts
+export const runtime = "nodejs"; // <- fuerza Node.js runtime
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { serialize } from "cookie";
