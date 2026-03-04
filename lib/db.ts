@@ -8,6 +8,3 @@ export const prisma =
   new PrismaClient({ log: ["query"] });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-const user = await prisma.user.findUnique({
-  where: { username: username }
-});

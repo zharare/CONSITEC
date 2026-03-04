@@ -1,13 +1,11 @@
 // app/api/auth/login/route.ts
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db"; // ahora sí existe
-import { serialize } from "cookie";
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
-  const { username, password } = await req.json();
+  const { username, password } = await req.json(); // aquí sí existe
 
   const user = await prisma.user.findUnique({
-    where: { username }
+    where: { username } // ✅ OK
   });
 
   if (!user || user.password !== password) {
