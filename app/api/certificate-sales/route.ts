@@ -37,10 +37,10 @@ export async function POST(req: Request) {
           serviceDate: new Date(body.saleDate),
           certificatesOnly: true,
           status: "SCHEDULED",
-          courseId: body.courseId ?? undefined,
-          salespersonId: body.salespersonId ?? undefined,
-          locationId: undefined,
-          instructorId: undefined
+          courseId: body.courseId ?? "",
+          salespersonId: body.salespersonId ?? "",
+          locationId: "",
+          instructorId: ""
         }
       });
     } catch (err) {
