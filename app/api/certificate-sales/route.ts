@@ -1,52 +1,71 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { CertificateSalePayload } from "@/lib/types";
+import { Prisma } from "@prisma/client";
 
+// ✅ GET (para dashboard)
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const month = Number(searchParams.get("month"));
-  const year = Number(searchParams.get("year"));
+  try {
+    const { searchParams } = new URL(req.url);
+    const month = Number(searchParams.get("month"));
+    const year = Number(searchParams.get("year"));
 
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 1);
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
 
-  const sales = await prisma.certificateSale.findMany({
-    where: { saleDate: { gte: start, lt: end } },
-    include: { course: true, salesperson: true },
-    orderBy: { saleDate: "desc" }
-  });
+    const sales = await prisma.certificateSale.findMany({
+      where: {
+        saleDate: { gte: start, lt: end },
+      },
+      include: {
+        course: true,
+        salesperson: true,
+      },
+      orderBy: { saleDate: "desc" },
+    });
 
-  return NextResponse.json(sales);
+    return NextResponse.json(sales);
+  } catch (err) {
+    console.error("Error en GET /certificate-sales:", err);
+    return NextResponse.json(
+      { error: "Error obteniendo ventas" },
+      { status: 500 }
+    );
+  }
 }
 
+// ✅ POST (para crear venta)
 export async function POST(req: Request) {
-  const body = (await req.json()) as CertificateSalePayload;
+  try {
+    const body = await req.json();
 
-  // Crear la venta de certificado
-  const createdSale = await prisma.certificateSale.create({
-    data: { ...body, saleDate: new Date(body.saleDate) }
-  });
+    const {
+      courseId,
+      salespersonId,
+      saleDate,
+      amount,
+      customerName,
+      customerType,
+      status
+    } = body;
 
-  // Si el monto es >= 900, crear también en services
-  if (Number(body.amount) >= 900) {
-    try {
-      await prisma.service.create({
-        data: {
-          company: body.customerName,
-          amount: Number(body.amount),
-          serviceDate: new Date(body.saleDate),
-          certificatesOnly: true,
-          status: "SCHEDULED",
-          courseId: body.courseId ?? "",
-          salespersonId: body.salespersonId ?? "",
-          locationId: "",
-          instructorId: ""
-        }
-      });
-    } catch (err) {
-      console.error("Error creando service desde certificate sale:", err);
-    }
+    const createdSale = await prisma.certificateSale.create({
+      data: {
+        courseId,
+        salespersonId,
+        saleDate: saleDate ? new Date(saleDate) : new Date(),
+        amount: new Prisma.Decimal(amount),
+        customerName,
+        customerType,
+        status
+      },
+    });
+
+    return NextResponse.json(createdSale, { status: 201 });
+  } catch (err) {
+    console.error("Error en POST /certificate-sales:", err);
+    return NextResponse.json(
+      { error: "Error creando venta" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(createdSale, { status: 201 });
 }

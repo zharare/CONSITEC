@@ -74,7 +74,11 @@ export default function Dashboard() {
     load();
   }
   async function submitSale() {
-    await fetch("/api/certificate-sales", { method: "POST", body: JSON.stringify({ ...saleForm, amount: Number(saleForm.amount), saleDate: `${saleForm.saleDate}T09:00:00.000Z` }) });
+    await fetch("/api/certificate-sales", { 
+  method: "POST", 
+  headers: { "Content-Type": "application/json" }, // MUY IMPORTANTE
+  body: JSON.stringify(body) 
+});
     setSaleForm({ ...saleForm, customerName: "", amount: "" });
     load();
   }
@@ -188,9 +192,17 @@ export default function Dashboard() {
               </button>
 
               <div><strong>{s.company}</strong></div>
-              <small>{s.course.name} · {s.instructor.name}</small><br />
-              <small>{s.location.department}/{s.location.district}</small><br />
-              <small>{s.salesperson.name} · S/{Number(s.amount).toFixed(2)}</small>
+              <small>
+  {s.course?.name ?? "Sin curso"} · {s.instructor?.name ?? "Sin instructor"}
+</small><br />
+
+<small>
+  {s.location?.department ?? "-"} / {s.location?.district ?? "-"}
+</small><br />
+
+<small>
+  {s.salesperson?.name ?? "Sin vendedor"} · S/{Number(s.amount ?? 0).toFixed(2)}
+</small>
             </div>
           )}
         </div>
@@ -210,9 +222,17 @@ export default function Dashboard() {
         {selectedDayServices.map(s => (
           <div key={s.id} className={`service-card ${s.certificatesOnly ? "cert" : ""} ${s.status === "EXECUTED" ? "executed" : ""}`} style={{ marginBottom: 8 }}>
             <div><strong>{s.company}</strong></div>
-            <small>{s.course.name} · {s.instructor.name}</small><br />
-            <small>{s.location.department}/{s.location.district}</small><br />
-            <small>{s.salesperson.name} · S/{Number(s.amount).toFixed(2)}</small>
+            <small>
+  {s.course?.name ?? "Sin curso"} · {s.instructor?.name ?? "Sin instructor"}
+</small><br />
+
+<small>
+  {s.location?.department ?? "-"} / {s.location?.district ?? "-"}
+</small><br />
+
+<small>
+  {s.salesperson?.name ?? "Sin vendedor"} · S/{Number(s.amount ?? 0).toFixed(2)}
+</small>
           </div>
         ))}
       </div>
@@ -220,98 +240,181 @@ export default function Dashboard() {
   )}
 </>}
 
-     {tab === "certificates" && <div className="grid">
-       <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))" }}>
-       <input className="input" placeholder="Customer" value={saleForm.customerName} onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })} />
-    
-      <select value={saleForm.customerType} onChange={(e) => setSaleForm({ ...saleForm, customerType: e.target.value as "NATURAL_PERSON" | "COMPANY" })}>
+     {tab === "certificates" && (
+  <div className="grid">
+    {/* FORMULARIO PARA AGREGAR VENTA */}
+    <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))", marginBottom: 16 }}>
+      <input
+        className="input"
+        placeholder="Customer"
+        value={saleForm.customerName}
+        onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })}
+      />
+
+      <select
+        value={saleForm.customerType}
+        onChange={(e) => setSaleForm({ ...saleForm, customerType: e.target.value as "NATURAL_PERSON" | "COMPANY" })}
+      >
         <option value="NATURAL_PERSON">Natural Person</option>
         <option value="COMPANY">Company</option>
-    </select>
+      </select>
 
-    <select value={saleForm.courseId} onChange={(e) => setSaleForm({ ...saleForm, courseId: e.target.value })}>
-      <option value="">Course</option>
-      {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-    </select>
+      <select
+        value={saleForm.courseId}
+        onChange={(e) => setSaleForm({ ...saleForm, courseId: e.target.value })}
+      >
+        <option value="">Course</option>
+        {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+      </select>
 
-    <select value={saleForm.salespersonId} onChange={(e) => setSaleForm({ ...saleForm, salespersonId: e.target.value })}>
-      <option value="">Commercial</option>
-      {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-    </select>
+      <select
+        value={saleForm.salespersonId}
+        onChange={(e) => setSaleForm({ ...saleForm, salespersonId: e.target.value })}
+      >
+        <option value="">Commercial</option>
+        {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+      </select>
 
-    <input className="input" type="date" value={saleForm.saleDate} onChange={(e) => setSaleForm({ ...saleForm, saleDate: e.target.value })} />
-    <input className="input" placeholder="Amount" value={saleForm.amount} onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })} />
+      <input
+        className="input"
+        type="date"
+        value={saleForm.saleDate}
+        onChange={(e) => setSaleForm({ ...saleForm, saleDate: e.target.value })}
+      />
 
-    <button className="btn" onClick={async () => {
-      if (!saleForm.customerName || !saleForm.courseId || !saleForm.salespersonId || !saleForm.amount) return alert("Complete todos los campos");
-      const body = {
-        ...saleForm,
-        amount: Number(saleForm.amount),
-        saleDate: `${saleForm.saleDate}T09:00:00.000Z`
-      };
-      
-      // Guardar en Certificate Sales
-      await fetch("/api/certificate-sales", { method: "POST", body: JSON.stringify(body) });
+      <input
+        className="input"
+        placeholder="Amount"
+        value={saleForm.amount}
+        onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })}
+      />
 
-      // Si amount > 900, agregar también a Monthly Services Board
-      if (Number(saleForm.amount) > 700) {
-        await fetch("/api/services", {
-          method: "POST",
-          body: JSON.stringify({
-            company: saleForm.customerType === "COMPANY" ? saleForm.companyName || saleForm.customerName : saleForm.customerName,
-            courseId: saleForm.courseId,
-            instructorId: "", // opcional, puedes dejar vacío
-            locationId: "",   // opcional
-            salespersonId: saleForm.salespersonId,
-            certificatesOnly: true,
+      <button
+        className="btn"
+        onClick={async () => {
+          if (!saleForm.customerName || !saleForm.courseId || !saleForm.salespersonId || !saleForm.amount) {
+            return alert("Complete todos los campos");
+          }
+
+          const body = {
+            ...saleForm,
             amount: Number(saleForm.amount),
-            serviceDate: `${saleForm.saleDate}T09:00:00.000Z`,
-            status: "SCHEDULED"
-          })
-        });
-      }
+            saleDate: `${saleForm.saleDate}T09:00:00.000Z`
+          };
 
-      setSaleForm({ customerName: "", customerType: "NATURAL_PERSON", courseId: "", salespersonId: "", amount: "", saleDate: format(new Date(), "yyyy-MM-dd"), status: "PAID", companyName: "" });
-      load();
-    }}>Save Sale</button>
-  </div>
+          try {
+            // Guardar en Certificate Sales
+            const res = await fetch("/api/certificate-sales", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
 
-  <div className="card">
-    <div style={{ display: "flex", gap: 20 }}>
-      <div>Natural persons: <strong>S/ {naturalTotal.toFixed(2)}</strong></div>
-      <div>Companies: <strong>S/ {companyTotal.toFixed(2)}</strong></div>
-      <div>Grand total: <strong>S/ {(naturalTotal + companyTotal).toFixed(2)}</strong></div>
+            const text = await res.text();
+let data = null;
+
+try {
+  data = text ? JSON.parse(text) : null;
+} catch (e) {
+  console.warn("La respuesta no es JSON válido:", text);
+}
+
+if (!res.ok) {
+  return alert(`Error guardando la venta: ${data?.error || res.status}`);
+}
+
+            // Si amount > 700, agregar también a Monthly Services Board
+            if (Number(saleForm.amount) > 700) {
+              await fetch("/api/services", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  company: saleForm.customerType === "COMPANY" ? saleForm.companyName || saleForm.customerName : saleForm.customerName,
+                  courseId: saleForm.courseId,
+                  instructorId: null,
+                  locationId: null,
+                  salespersonId: saleForm.salespersonId,
+                  certificatesOnly: true,
+                  amount: Number(saleForm.amount),
+                  serviceDate: `${saleForm.saleDate}T09:00:00.000Z`,
+                  status: "SCHEDULED"
+                })
+              });
+            }
+
+            // Reset form
+            setSaleForm({
+              customerName: "",
+              customerType: "NATURAL_PERSON",
+              courseId: "",
+              salespersonId: "",
+              amount: "",
+              saleDate: format(new Date(), "yyyy-MM-dd"),
+              status: "PAID",
+              companyName: ""
+            });
+
+            // Recargar tabla
+            load();
+          } catch (err) {
+            console.error("Error creando sale:", err);
+            alert("Error guardando la venta, revisa la consola");
+          }
+        }}
+      >
+        Save Sale
+      </button>
     </div>
-    <table className="table">
-      <thead>
-        <tr><th>Customer</th><th>Type</th><th>Course</th><th>Commercial</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr>
-      </thead>
-      <tbody>
-        {sales.map((s) => <tr key={s.id}>
-          <td>{s.customerName}</td>
-          <td>{s.customerType}</td>
-          <td>{s.course.name}</td>
-          <td>{s.salesperson.name}</td>
-          <td>S/{Number(s.amount).toFixed(2)}</td>
-          <td>{format(new Date(s.saleDate), "yyyy-MM-dd")}</td>
-          <td>{s.status}</td>
-          <td>
-            <button style={{ background: "transparent", color: "#555", border: "none", cursor: "pointer" }} onClick={async () => {
-              if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
-              try {
-                const res = await fetch(`/api/certificate-sales/${s.id}`, { method: "DELETE" });
-                if (!res.ok) throw new Error("No se pudo eliminar");
-                load();
-              } catch (err) {
-                alert("Error eliminando el registro");
-              }
-            }}>✕</button>
-          </td>
-        </tr>)}
-      </tbody>
-    </table>
+
+    {/* RESUMEN DE VENTAS */}
+    <div className="card">
+      <div style={{ display: "flex", gap: 20 }}>
+        <div>Natural persons: <strong>S/ {naturalTotal.toFixed(2)}</strong></div>
+        <div>Companies: <strong>S/ {companyTotal.toFixed(2)}</strong></div>
+        <div>Grand total: <strong>S/ {(naturalTotal + companyTotal).toFixed(2)}</strong></div>
+      </div>
+
+      {/* TABLA DE VENTAS */}
+      <table className="table">
+        <thead>
+          <tr><th>Customer</th><th>Type</th><th>Course</th><th>Commercial</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {sales.map((s) => (
+            <tr key={s.id}>
+              <td>{s.customerName}</td>
+              <td>{s.customerType}</td>
+              <td>{s.course.name}</td>
+              <td>{s.salesperson.name}</td>
+              <td>S/{Number(s.amount).toFixed(2)}</td>
+              <td>{format(new Date(s.saleDate), "yyyy-MM-dd")}</td>
+              <td>{s.status}</td>
+              <td>
+                <button
+                  style={{ background: "transparent", color: "#555", border: "none", cursor: "pointer" }}
+                  onClick={async () => {
+                    if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+                    try {
+                      const res = await fetch(`/api/certificate-sales/${s.id}`, {
+                        method: "DELETE",
+                      });
+                      if (!res.ok) throw new Error("No se pudo eliminar");
+
+                      setSales(prev => prev.filter(x => x.id !== s.id));
+                    } catch (err) {
+                      console.error(err);
+                      alert("Error eliminando la venta");
+                    }
+                  }}
+                >✕</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>}
+)}
 
       {tab === "performance" && <div className="card">
         <table className="table"><thead><tr><th>Week</th>{meta.salespeople.map((s: any) => <th key={s.id}>{s.name}</th>)}</tr></thead><tbody>{["Week 1", "Week 2", "Week 3", "Week 4"].map((week) => <tr key={week}><td>{week}</td>{meta.salespeople.map((sp: any) => {
@@ -337,7 +440,11 @@ function CrudCard({ title, endpoint, fields, items, onDone }: { title: string; e
 
   return <div className="card"><h4>{title}</h4>
     <div className="grid">{fields.map((f) => <input key={f} className="input" placeholder={f} value={form[f] || ""} onChange={(e) => setForm({ ...form, [f]: e.target.value })} />)}
-      <button className="btn" onClick={async () => { await fetch(`/api/metadata/${endpoint}`, { method: "POST", body: JSON.stringify(form) }); setForm({}); onDone(); }}>Add</button>
+      <button className="btn" onClick={async () => { await fetch(`/api/metadata/${endpoint}`, { 
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(form)
+}); setForm({}); onDone(); }}>Add</button>
     </div>
     <ul>
         {items.slice(0, 8).map((i) => (

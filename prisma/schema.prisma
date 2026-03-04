@@ -61,24 +61,24 @@ model Location {
 }
 
 model Service {
-  id              String        @id @default(cuid())
-  company         String
-  amount          Decimal       @db.Decimal(10, 2)
-  serviceDate     DateTime
-  certificatesOnly Boolean      @default(false)
-  status          ServiceStatus @default(SCHEDULED)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  company          String
+  amount           Decimal       @db.Decimal(10, 2)
+  serviceDate      DateTime
+  certificatesOnly Boolean       @default(false)
+  status           ServiceStatus @default(SCHEDULED)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   courseId       String
-  instructorId   String
-  locationId     String
+  instructorId   String?     // 👈 OPCIONAL
+  locationId     String?     // 👈 OPCIONAL
   salespersonId  String
 
-  course         Course       @relation(fields: [courseId], references: [id])
-  instructor     Instructor   @relation(fields: [instructorId], references: [id])
-  location       Location     @relation(fields: [locationId], references: [id])
-  salesperson    Salesperson  @relation(fields: [salespersonId], references: [id])
+  course        Course      @relation(fields: [courseId], references: [id])
+  instructor    Instructor? @relation(fields: [instructorId], references: [id])
+  location      Location?   @relation(fields: [locationId], references: [id])
+  salesperson   Salesperson @relation(fields: [salespersonId], references: [id])
 
   @@index([serviceDate])
 }
