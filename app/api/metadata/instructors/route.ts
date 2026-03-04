@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  return NextResponse.json(await prisma.instructor.findMany({ orderBy: { name: "asc" } }));
+  const instructors = await prisma.instructor.findMany({ orderBy: { name: "asc" } });
+  return NextResponse.json(instructors);
 }
 
 export async function POST(req: Request) {
   const data = await req.json();
-  return NextResponse.json(await prisma.instructor.create({ data }));
+  const newInstructor = await prisma.instructor.create({ data });
+  return NextResponse.json(newInstructor);
 }
