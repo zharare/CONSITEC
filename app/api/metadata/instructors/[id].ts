@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'DELETE') {
     try {
       await prisma.instructor.delete({
-        where: { id: Number(id) }, // Asumiendo que tu ID es numérico
+        where: { id: id as string }
       });
       res.status(200).json({ message: 'Instructor eliminado' });
     } catch (error) {
