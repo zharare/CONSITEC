@@ -72,16 +72,7 @@ export default function Dashboard() {
     await fetch("/api/services", { method: "POST", body: JSON.stringify({ ...serviceForm, amount: Number(serviceForm.amount), serviceDate: `${serviceForm.serviceDate}T09:00:00.000Z` }) });
     setServiceForm({ ...serviceForm, company: "", amount: "" });
     load();
-  }
-  async function submitSale() {
-    await fetch("/api/certificate-sales", { 
-  method: "POST", 
-  headers: { "Content-Type": "application/json" }, // MUY IMPORTANTE
-  body: JSON.stringify(body) 
-});
-    setSaleForm({ ...saleForm, customerName: "", amount: "" });
-    load();
-  }
+  };
 
   const salesChartData = Object.entries(dashboard.bySalesperson || {}).map(([name, value]) => ({ name, value }));
   const weekChartData = Object.entries(dashboard.byWeek || {}).map(([name, value]) => ({ name, value }));
