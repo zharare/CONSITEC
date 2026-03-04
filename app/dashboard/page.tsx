@@ -45,7 +45,7 @@ export default function Dashboard() {
   const [meta, setMeta] = useState<{ instructors: Meta[]; courses: Meta[]; salespeople: Meta[]; locations: Meta[] }>({ instructors: [], courses: [], salespeople: [], locations: [] });
 
   const [serviceForm, setServiceForm] = useState({ company: "", courseId: "", instructorId: "", locationId: "", salespersonId: "", certificatesOnly: false, amount: "", serviceDate: format(now, "yyyy-MM-dd"), status: "SCHEDULED" });
-  const [saleForm, setSaleForm] = useState({ customerName: "", customerType: "NATURAL_PERSON", courseId: "", salespersonId: "", amount: "", saleDate: format(now, "yyyy-MM-dd"), status: "PAID" });
+  const [saleForm, setSaleForm] = useState({ customerName: "", customerType: "NATURAL_PERSON", companyName: "", courseId: "", salespersonId: "", amount: "", saleDate: format(now, "yyyy-MM-dd"), status: "PAID" });
   const [selectedDayServices, setSelectedDayServices] = useState<Service[] | null>(null);
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
