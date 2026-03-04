@@ -21,8 +21,32 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = (await req.json()) as CertificateSalePayload;
-  const created = await prisma.certificateSale.create({
+
+  // Crear la venta de certificado
+  const createdSale = await prisma.certificateSale.create({
     data: { ...body, saleDate: new Date(body.saleDate) }
   });
-  return NextResponse.json(created, { status: 201 });
+
+  // Si el monto es >= 900, crear también en services
+  if (Number(body.amount) >= 900) {
+    try {
+      await prisma.service.create({
+        data: {
+          company: body.customerName,
+          amount: Number(body.amount),
+          serviceDate: new Date(body.saleDate),
+          certificatesOnly: true,
+          status: "SCHEDULED",
+          courseId: body.courseId ?? undefined,
+          salespersonId: body.salespersonId ?? undefined,
+          locationId: undefined,
+          instructorId: undefined
+        }
+      });
+    } catch (err) {
+      console.error("Error creando service desde certificate sale:", err);
+    }
+  }
+
+  return NextResponse.json(createdSale, { status: 201 });
 }

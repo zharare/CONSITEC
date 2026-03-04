@@ -46,7 +46,7 @@ export default function Dashboard() {
 
   const [serviceForm, setServiceForm] = useState({ company: "", courseId: "", instructorId: "", locationId: "", salespersonId: "", certificatesOnly: false, amount: "", serviceDate: format(now, "yyyy-MM-dd"), status: "SCHEDULED" });
   const [saleForm, setSaleForm] = useState({ customerName: "", customerType: "NATURAL_PERSON", courseId: "", salespersonId: "", amount: "", saleDate: format(now, "yyyy-MM-dd"), status: "PAID" });
-
+  const [selectedDayServices, setSelectedDayServices] = useState<Service[] | null>(null);
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
   async function load() {
@@ -122,98 +122,158 @@ export default function Dashboard() {
       </div>}
 
      {tab === "services" && <>
-       {/* FORMULARIO PARA AGREGAR SERVICIO */}
-       <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))", marginBottom: 16 }}>
-         <input className="input" placeholder="Company" value={serviceForm.company} onChange={(e) => setServiceForm({ ...serviceForm, company: e.target.value })} />
-         <select value={serviceForm.courseId} onChange={(e) => setServiceForm({ ...serviceForm, courseId: e.target.value })}>
-           <option value="">Course</option>
-          {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-        </select>
-        <select value={serviceForm.instructorId} onChange={(e) => setServiceForm({ ...serviceForm, instructorId: e.target.value })}>
-         <option value="">Instructor</option>
-         {meta.instructors.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-      </select>
-      <select value={serviceForm.locationId} onChange={(e) => setServiceForm({ ...serviceForm, locationId: e.target.value })}>
-        <option value="">District</option>
-        {meta.locations.map((x: any) => <option key={x.id} value={x.id}>{x.department} - {x.district}</option>)}
-      </select>
-      <select value={serviceForm.salespersonId} onChange={(e) => setServiceForm({ ...serviceForm, salespersonId: e.target.value })}>
-        <option value="">Sales rep</option>
-        {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-     </select>
-     <input className="input" type="date" value={serviceForm.serviceDate} onChange={(e) => setServiceForm({ ...serviceForm, serviceDate: e.target.value })} />
-     <input className="input" type="number" placeholder="Amount" value={serviceForm.amount} onChange={(e) => setServiceForm({ ...serviceForm, amount: e.target.value })} />
-     <button className="btn" onClick={submitService}>Add Service</button>
-     <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+  {/* FORMULARIO PARA AGREGAR SERVICIO */}
+  <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))", marginBottom: 16 }}>
+    <input className="input" placeholder="Company" value={serviceForm.company} onChange={(e) => setServiceForm({ ...serviceForm, company: e.target.value })} />
+    <select value={serviceForm.courseId} onChange={(e) => setServiceForm({ ...serviceForm, courseId: e.target.value })}>
+      <option value="">Course</option>
+      {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+    </select>
+    <select value={serviceForm.instructorId} onChange={(e) => setServiceForm({ ...serviceForm, instructorId: e.target.value })}>
+      <option value="">Instructor</option>
+      {meta.instructors.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+    </select>
+    <select value={serviceForm.locationId} onChange={(e) => setServiceForm({ ...serviceForm, locationId: e.target.value })}>
+      <option value="">District</option>
+      {meta.locations.map((x: any) => <option key={x.id} value={x.id}>{x.department} - {x.district}</option>)}
+    </select>
+    <select value={serviceForm.salespersonId} onChange={(e) => setServiceForm({ ...serviceForm, salespersonId: e.target.value })}>
+      <option value="">Sales rep</option>
+      {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+    </select>
+    <input className="input" type="date" value={serviceForm.serviceDate} onChange={(e) => setServiceForm({ ...serviceForm, serviceDate: e.target.value })} />
+    <input className="input" type="number" placeholder="Amount" value={serviceForm.amount} onChange={(e) => setServiceForm({ ...serviceForm, amount: e.target.value })} />
+    <button className="btn" onClick={submitService}>Add Service</button>
+    <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
       <input type="checkbox" checked={serviceForm.certificatesOnly} onChange={(e) => setServiceForm({ ...serviceForm, certificatesOnly: e.target.checked })} /> Certificates only
     </label>
   </div>
 
-  {/* GRILLA DEL CALENDARIO CON X */}
+  {/* GRILLA DEL CALENDARIO */}
   <div className="grid calendar-grid">
     {days.map((d) => {
       const items = services.filter((s) => new Date(s.serviceDate).getDate() === d);
-      return <div className="day-col" key={d}>
-        <strong>Day {d}</strong>
-        {items.map((s) => 
-          <div key={s.id} className={`service-card ${s.certificatesOnly ? "cert" : ""} ${s.status === "EXECUTED" ? "executed" : ""}`} style={{ position: "relative" }}>
-            {/* BOTÓN X */}
-            <button
-              onClick={async () => {
-                if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
-                try {
-                  const res = await fetch(`/api/services/${s.id}`, { method: "DELETE" });
-                  if (!res.ok) throw new Error("No se pudo eliminar");
-                  setServices(prev => prev.filter(x => x.id !== s.id));
-                } catch (err) {
-                  alert("Error eliminando el registro");
-                }
-              }}
-              style={{
-                position: "absolute",
-                top: 4,
-                right: 4,
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                fontWeight: "bold",
-                color: "#555",
-                fontSize: "14px",
-                lineHeight: 1
-              }}
-            >
-              ✕
-            </button>
+      return (
+        <div className="day-col" key={d} onClick={() => setSelectedDayServices(items)} style={{ cursor: "pointer" }}>
+          <strong>Day {d}</strong>
+          {items.map((s) =>
+            <div key={s.id} className={`service-card ${s.certificatesOnly ? "cert" : ""} ${s.status === "EXECUTED" ? "executed" : ""}`} style={{ position: "relative" }}>
+              {/* BOTÓN X */}
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+                  try {
+                    const res = await fetch(`/api/services/${s.id}`, { method: "DELETE" });
+                    if (!res.ok) throw new Error("No se pudo eliminar");
+                    setServices(prev => prev.filter(x => x.id !== s.id));
+                  } catch (err) {
+                    alert("Error eliminando el registro");
+                  }
+                }}
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  color: "#555",
+                  fontSize: "14px",
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
 
+              <div><strong>{s.company}</strong></div>
+              <small>{s.course.name} · {s.instructor.name}</small><br />
+              <small>{s.location.department}/{s.location.district}</small><br />
+              <small>{s.salesperson.name} · S/{Number(s.amount).toFixed(2)}</small>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+
+  {/* MODAL FLOTANTE CON TODOS LOS SERVICIOS DEL DÍA */}
+  {selectedDayServices && (
+    <div className="modal-overlay" onClick={() => setSelectedDayServices(null)} style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.4)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 999
+    }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", padding: 16, borderRadius: 8, maxHeight: "80vh", overflowY: "auto", minWidth: 300, position: "relative" }}>
+        <h4>Servicios del día</h4>
+        <button style={{ position: "absolute", top: 8, right: 8 }} onClick={() => setSelectedDayServices(null)}>✕</button>
+        {selectedDayServices.map(s => (
+          <div key={s.id} className={`service-card ${s.certificatesOnly ? "cert" : ""} ${s.status === "EXECUTED" ? "executed" : ""}`} style={{ marginBottom: 8 }}>
             <div><strong>{s.company}</strong></div>
             <small>{s.course.name} · {s.instructor.name}</small><br />
             <small>{s.location.department}/{s.location.district}</small><br />
             <small>{s.salesperson.name} · S/{Number(s.amount).toFixed(2)}</small>
           </div>
-        )}
-      </div>;
-    })}
-  </div>
+        ))}
+      </div>
+    </div>
+  )}
 </>}
 
-      {tab === "certificates" && <div className="grid">
-         <div className="card grid" style={{ gridTemplateColumns: "repeat(7,minmax(120px,1fr))" }}>
-          <input className="input" placeholder="Customer" value={saleForm.customerName} onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })} />
-         <select value={saleForm.customerType} onChange={(e) => setSaleForm({ ...saleForm, customerType: e.target.value as any })}>
-          <option value="NATURAL_PERSON">Natural Person</option>
-          <option value="COMPANY">Company</option>
-        </select>
-       <select value={saleForm.courseId} onChange={(e) => setSaleForm({ ...saleForm, courseId: e.target.value })}>
-         <option value="">Course</option>
-         {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-       </select>
-       <select value={saleForm.salespersonId} onChange={(e) => setSaleForm({ ...saleForm, salespersonId: e.target.value })}>
-         <option value="">Commercial</option>
-         {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
-       </select>
-       <input className="input" type="date" value={saleForm.saleDate} onChange={(e) => setSaleForm({ ...saleForm, saleDate: e.target.value })} />
-        <input className="input" placeholder="Amount" value={saleForm.amount} onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })} />
-        <button className="btn" onClick={submitSale}>Save Sale</button>
+     {tab === "certificates" && <div className="grid">
+       <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))" }}>
+       <input className="input" placeholder="Customer" value={saleForm.customerName} onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })} />
+    
+      <select value={saleForm.customerType} onChange={(e) => setSaleForm({ ...saleForm, customerType: e.target.value as "NATURAL_PERSON" | "COMPANY" })}>
+        <option value="NATURAL_PERSON">Natural Person</option>
+        <option value="COMPANY">Company</option>
+    </select>
+
+    <select value={saleForm.courseId} onChange={(e) => setSaleForm({ ...saleForm, courseId: e.target.value })}>
+      <option value="">Course</option>
+      {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+    </select>
+
+    <select value={saleForm.salespersonId} onChange={(e) => setSaleForm({ ...saleForm, salespersonId: e.target.value })}>
+      <option value="">Commercial</option>
+      {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+    </select>
+
+    <input className="input" type="date" value={saleForm.saleDate} onChange={(e) => setSaleForm({ ...saleForm, saleDate: e.target.value })} />
+    <input className="input" placeholder="Amount" value={saleForm.amount} onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })} />
+
+    <button className="btn" onClick={async () => {
+      if (!saleForm.customerName || !saleForm.courseId || !saleForm.salespersonId || !saleForm.amount) return alert("Complete todos los campos");
+      const body = {
+        ...saleForm,
+        amount: Number(saleForm.amount),
+        saleDate: `${saleForm.saleDate}T09:00:00.000Z`
+      };
+      
+      // Guardar en Certificate Sales
+      await fetch("/api/certificate-sales", { method: "POST", body: JSON.stringify(body) });
+
+      // Si amount > 900, agregar también a Monthly Services Board
+      if (Number(saleForm.amount) > 700) {
+        await fetch("/api/services", {
+          method: "POST",
+          body: JSON.stringify({
+            company: saleForm.customerType === "COMPANY" ? saleForm.companyName || saleForm.customerName : saleForm.customerName,
+            courseId: saleForm.courseId,
+            instructorId: "", // opcional, puedes dejar vacío
+            locationId: "",   // opcional
+            salespersonId: saleForm.salespersonId,
+            certificatesOnly: true,
+            amount: Number(saleForm.amount),
+            serviceDate: `${saleForm.saleDate}T09:00:00.000Z`,
+            status: "SCHEDULED"
+          })
+        });
+      }
+
+      setSaleForm({ customerName: "", customerType: "NATURAL_PERSON", courseId: "", salespersonId: "", amount: "", saleDate: format(new Date(), "yyyy-MM-dd"), status: "PAID", companyName: "" });
+      load();
+    }}>Save Sale</button>
   </div>
 
   <div className="card">
@@ -222,57 +282,32 @@ export default function Dashboard() {
       <div>Companies: <strong>S/ {companyTotal.toFixed(2)}</strong></div>
       <div>Grand total: <strong>S/ {(naturalTotal + companyTotal).toFixed(2)}</strong></div>
     </div>
-
     <table className="table">
       <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Type</th>
-          <th>Course</th>
-          <th>Commercial</th>
-          <th>Amount</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Delete</th> {/* nueva columna para la X */}
-        </tr>
+        <tr><th>Customer</th><th>Type</th><th>Course</th><th>Commercial</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr>
       </thead>
       <tbody>
-        {sales.map((s) => (
-          <tr key={s.id}>
-            <td>{s.customerName}</td>
-            <td>{s.customerType}</td>
-            <td>{s.course.name}</td>
-            <td>{s.salesperson.name}</td>
-            <td>S/{Number(s.amount).toFixed(2)}</td>
-            <td>{format(new Date(s.saleDate), "yyyy-MM-dd")}</td>
-            <td>{s.status}</td>
-            <td>
-              <button
-                onClick={async () => {
-                  if (!confirm("¿Seguro que quieres eliminar esta venta?")) return;
-                  try {
-                    const res = await fetch(`/api/certificate-sales/${s.id}`, { method: "DELETE" });
-                    if (!res.ok) throw new Error("No se pudo eliminar");
-                    setSales(prev => prev.filter(x => x.id !== s.id));
-                  } catch (err) {
-                    alert("Error eliminando la venta");
-                  }
-                }}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#555",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                  lineHeight: 1
-                }}
-              >
-                ✕
-              </button>
-            </td>
-          </tr>
-        ))}
+        {sales.map((s) => <tr key={s.id}>
+          <td>{s.customerName}</td>
+          <td>{s.customerType}</td>
+          <td>{s.course.name}</td>
+          <td>{s.salesperson.name}</td>
+          <td>S/{Number(s.amount).toFixed(2)}</td>
+          <td>{format(new Date(s.saleDate), "yyyy-MM-dd")}</td>
+          <td>{s.status}</td>
+          <td>
+            <button style={{ background: "transparent", color: "#555", border: "none", cursor: "pointer" }} onClick={async () => {
+              if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+              try {
+                const res = await fetch(`/api/certificate-sales/${s.id}`, { method: "DELETE" });
+                if (!res.ok) throw new Error("No se pudo eliminar");
+                load();
+              } catch (err) {
+                alert("Error eliminando el registro");
+              }
+            }}>✕</button>
+          </td>
+        </tr>)}
       </tbody>
     </table>
   </div>
