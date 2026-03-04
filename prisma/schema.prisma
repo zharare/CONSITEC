@@ -76,7 +76,7 @@ model Service {
   salespersonId  String
 
   course        Course      @relation(fields: [courseId], references: [id])
-  instructor    Instructor? @relation(fields: [instructorId], references: [id])
+  instructor    Instructor? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
   location      Location?   @relation(fields: [locationId], references: [id])
   salesperson   Salesperson @relation(fields: [salespersonId], references: [id])
 
