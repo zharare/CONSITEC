@@ -197,24 +197,86 @@ export default function Dashboard() {
 </>}
 
       {tab === "certificates" && <div className="grid">
-        <div className="card grid" style={{ gridTemplateColumns: "repeat(7,minmax(120px,1fr))" }}>
+         <div className="card grid" style={{ gridTemplateColumns: "repeat(7,minmax(120px,1fr))" }}>
           <input className="input" placeholder="Customer" value={saleForm.customerName} onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })} />
-          <select value={saleForm.customerType} onChange={(e) => setSaleForm({ ...saleForm, customerType: e.target.value as any })}><option value="NATURAL_PERSON">Natural Person</option><option value="COMPANY">Company</option></select>
-          <select value={saleForm.courseId} onChange={(e) => setSaleForm({ ...saleForm, courseId: e.target.value })}><option value="">Course</option>{meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-          <select value={saleForm.salespersonId} onChange={(e) => setSaleForm({ ...saleForm, salespersonId: e.target.value })}><option value="">Commercial</option>{meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-          <input className="input" type="date" value={saleForm.saleDate} onChange={(e) => setSaleForm({ ...saleForm, saleDate: e.target.value })} />
-          <input className="input" placeholder="Amount" value={saleForm.amount} onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })} />
-          <button className="btn" onClick={submitSale}>Save Sale</button>
-        </div>
-        <div className="card">
-          <div style={{ display: "flex", gap: 20 }}>
-            <div>Natural persons: <strong>S/ {naturalTotal.toFixed(2)}</strong></div>
-            <div>Companies: <strong>S/ {companyTotal.toFixed(2)}</strong></div>
-            <div>Grand total: <strong>S/ {(naturalTotal + companyTotal).toFixed(2)}</strong></div>
-          </div>
-          <table className="table"><thead><tr><th>Customer</th><th>Type</th><th>Course</th><th>Commercial</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>{sales.map((s) => <tr key={s.id}><td>{s.customerName}</td><td>{s.customerType}</td><td>{s.course.name}</td><td>{s.salesperson.name}</td><td>S/{Number(s.amount).toFixed(2)}</td><td>{format(new Date(s.saleDate), "yyyy-MM-dd")}</td><td>{s.status}</td></tr>)}</tbody></table>
-        </div>
-      </div>}
+         <select value={saleForm.customerType} onChange={(e) => setSaleForm({ ...saleForm, customerType: e.target.value as any })}>
+          <option value="NATURAL_PERSON">Natural Person</option>
+          <option value="COMPANY">Company</option>
+        </select>
+       <select value={saleForm.courseId} onChange={(e) => setSaleForm({ ...saleForm, courseId: e.target.value })}>
+         <option value="">Course</option>
+         {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+       </select>
+       <select value={saleForm.salespersonId} onChange={(e) => setSaleForm({ ...saleForm, salespersonId: e.target.value })}>
+         <option value="">Commercial</option>
+         {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+       </select>
+       <input className="input" type="date" value={saleForm.saleDate} onChange={(e) => setSaleForm({ ...saleForm, saleDate: e.target.value })} />
+        <input className="input" placeholder="Amount" value={saleForm.amount} onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })} />
+        <button className="btn" onClick={submitSale}>Save Sale</button>
+  </div>
+
+  <div className="card">
+    <div style={{ display: "flex", gap: 20 }}>
+      <div>Natural persons: <strong>S/ {naturalTotal.toFixed(2)}</strong></div>
+      <div>Companies: <strong>S/ {companyTotal.toFixed(2)}</strong></div>
+      <div>Grand total: <strong>S/ {(naturalTotal + companyTotal).toFixed(2)}</strong></div>
+    </div>
+
+    <table className="table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Type</th>
+          <th>Course</th>
+          <th>Commercial</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Delete</th> {/* nueva columna para la X */}
+        </tr>
+      </thead>
+      <tbody>
+        {sales.map((s) => (
+          <tr key={s.id}>
+            <td>{s.customerName}</td>
+            <td>{s.customerType}</td>
+            <td>{s.course.name}</td>
+            <td>{s.salesperson.name}</td>
+            <td>S/{Number(s.amount).toFixed(2)}</td>
+            <td>{format(new Date(s.saleDate), "yyyy-MM-dd")}</td>
+            <td>{s.status}</td>
+            <td>
+              <button
+                onClick={async () => {
+                  if (!confirm("¿Seguro que quieres eliminar esta venta?")) return;
+                  try {
+                    const res = await fetch(`/api/certificate-sales/${s.id}`, { method: "DELETE" });
+                    if (!res.ok) throw new Error("No se pudo eliminar");
+                    setSales(prev => prev.filter(x => x.id !== s.id));
+                  } catch (err) {
+                    alert("Error eliminando la venta");
+                  }
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#555",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>}
 
       {tab === "performance" && <div className="card">
         <table className="table"><thead><tr><th>Week</th>{meta.salespeople.map((s: any) => <th key={s.id}>{s.name}</th>)}</tr></thead><tbody>{["Week 1", "Week 2", "Week 3", "Week 4"].map((week) => <tr key={week}><td>{week}</td>{meta.salespeople.map((sp: any) => {
