@@ -121,31 +121,80 @@ export default function Dashboard() {
         </div>
       </div>}
 
-      {tab === "services" && <>
-        <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))" }}>
-          <input className="input" placeholder="Company" value={serviceForm.company} onChange={(e) => setServiceForm({ ...serviceForm, company: e.target.value })} />
-          <select value={serviceForm.courseId} onChange={(e) => setServiceForm({ ...serviceForm, courseId: e.target.value })}><option value="">Course</option>{meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-          <select value={serviceForm.instructorId} onChange={(e) => setServiceForm({ ...serviceForm, instructorId: e.target.value })}><option value="">Instructor</option>{meta.instructors.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-          <select value={serviceForm.locationId} onChange={(e) => setServiceForm({ ...serviceForm, locationId: e.target.value })}><option value="">District</option>{meta.locations.map((x: any) => <option key={x.id} value={x.id}>{x.department} - {x.district}</option>)}</select>
-          <select value={serviceForm.salespersonId} onChange={(e) => setServiceForm({ ...serviceForm, salespersonId: e.target.value })}><option value="">Sales rep</option>{meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-          <input className="input" type="date" value={serviceForm.serviceDate} onChange={(e) => setServiceForm({ ...serviceForm, serviceDate: e.target.value })} />
-          <input className="input" type="number" placeholder="Amount" value={serviceForm.amount} onChange={(e) => setServiceForm({ ...serviceForm, amount: e.target.value })} />
-          <button className="btn" onClick={submitService}>Add Service</button>
-          <label><input type="checkbox" checked={serviceForm.certificatesOnly} onChange={(e) => setServiceForm({ ...serviceForm, certificatesOnly: e.target.checked })} /> Certificates only</label>
-        </div>
+     {tab === "services" && <>
+       {/* FORMULARIO PARA AGREGAR SERVICIO */}
+       <div className="card grid" style={{ gridTemplateColumns: "repeat(8,minmax(120px,1fr))", marginBottom: 16 }}>
+         <input className="input" placeholder="Company" value={serviceForm.company} onChange={(e) => setServiceForm({ ...serviceForm, company: e.target.value })} />
+         <select value={serviceForm.courseId} onChange={(e) => setServiceForm({ ...serviceForm, courseId: e.target.value })}>
+           <option value="">Course</option>
+          {meta.courses.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+        </select>
+        <select value={serviceForm.instructorId} onChange={(e) => setServiceForm({ ...serviceForm, instructorId: e.target.value })}>
+         <option value="">Instructor</option>
+         {meta.instructors.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+      </select>
+      <select value={serviceForm.locationId} onChange={(e) => setServiceForm({ ...serviceForm, locationId: e.target.value })}>
+        <option value="">District</option>
+        {meta.locations.map((x: any) => <option key={x.id} value={x.id}>{x.department} - {x.district}</option>)}
+      </select>
+      <select value={serviceForm.salespersonId} onChange={(e) => setServiceForm({ ...serviceForm, salespersonId: e.target.value })}>
+        <option value="">Sales rep</option>
+        {meta.salespeople.map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+     </select>
+     <input className="input" type="date" value={serviceForm.serviceDate} onChange={(e) => setServiceForm({ ...serviceForm, serviceDate: e.target.value })} />
+     <input className="input" type="number" placeholder="Amount" value={serviceForm.amount} onChange={(e) => setServiceForm({ ...serviceForm, amount: e.target.value })} />
+     <button className="btn" onClick={submitService}>Add Service</button>
+     <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <input type="checkbox" checked={serviceForm.certificatesOnly} onChange={(e) => setServiceForm({ ...serviceForm, certificatesOnly: e.target.checked })} /> Certificates only
+    </label>
+  </div>
 
-        <div className="grid calendar-grid">
-          {days.map((d) => {
-            const items = services.filter((s) => new Date(s.serviceDate).getDate() === d);
-            return <div className="day-col" key={d}><strong>Day {d}</strong>{items.map((s) => <div key={s.id} className={`service-card ${s.certificatesOnly ? "cert" : ""} ${s.status === "EXECUTED" ? "executed" : ""}`}>
-              <div><strong>{s.company}</strong></div>
-              <small>{s.course.name} · {s.instructor.name}</small><br />
-              <small>{s.location.department}/{s.location.district}</small><br />
-              <small>{s.salesperson.name} · S/{Number(s.amount).toFixed(2)}</small>
-            </div>)}</div>;
-          })}
-        </div>
-      </>}
+  {/* GRILLA DEL CALENDARIO CON X */}
+  <div className="grid calendar-grid">
+    {days.map((d) => {
+      const items = services.filter((s) => new Date(s.serviceDate).getDate() === d);
+      return <div className="day-col" key={d}>
+        <strong>Day {d}</strong>
+        {items.map((s) => 
+          <div key={s.id} className={`service-card ${s.certificatesOnly ? "cert" : ""} ${s.status === "EXECUTED" ? "executed" : ""}`} style={{ position: "relative" }}>
+            {/* BOTÓN X */}
+            <button
+              onClick={async () => {
+                if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+                try {
+                  const res = await fetch(`/api/services/${s.id}`, { method: "DELETE" });
+                  if (!res.ok) throw new Error("No se pudo eliminar");
+                  setServices(prev => prev.filter(x => x.id !== s.id));
+                } catch (err) {
+                  alert("Error eliminando el registro");
+                }
+              }}
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                fontWeight: "bold",
+                color: "#555",
+                fontSize: "14px",
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+
+            <div><strong>{s.company}</strong></div>
+            <small>{s.course.name} · {s.instructor.name}</small><br />
+            <small>{s.location.department}/{s.location.district}</small><br />
+            <small>{s.salesperson.name} · S/{Number(s.amount).toFixed(2)}</small>
+          </div>
+        )}
+      </div>;
+    })}
+  </div>
+</>}
 
       {tab === "certificates" && <div className="grid">
         <div className="card grid" style={{ gridTemplateColumns: "repeat(7,minmax(120px,1fr))" }}>
