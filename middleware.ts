@@ -2,13 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const cookie = req.cookies.get("consitec_session")?.value;
-  if (!cookie) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+  // 🟢 Eliminamos la verificación de sesión
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"]
+  matcher: ["/dashboard/:path*"] // sigue aplicando para rutas, pero sin bloquear
 };
